@@ -35,7 +35,7 @@
             <f:textbox/>
         </f:entry>
 
-        <f:entry title="Timeout interval (in ms)" field="timeout" default="20">
+        <f:entry title="Timeout interval (in ms)" field="timeout" default="20000">
             <f:textbox/>
         </f:entry>
 
