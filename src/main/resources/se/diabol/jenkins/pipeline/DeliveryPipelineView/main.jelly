@@ -78,7 +78,7 @@
 
                 var pipelineutils = new pipelineUtils();
 
-                pipelineutils.updatePipelines(pipelineContainers, "pipelineerror-" + pipelineid, view, ${fullscreen}, ${page}, ${component}, ${it.isShowChanges()},
+                pipelineutils.updatePipelines(pipelineContainers, ${it.timeout}, "pipelineerror-" + pipelineid, view, ${fullscreen}, ${page}, ${component}, ${it.isShowChanges()},
 
                 <j:choose>
                     <j:when test="it.getAggregatedChangesGroupingPattern()">

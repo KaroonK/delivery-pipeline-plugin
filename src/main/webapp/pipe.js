@@ -1,11 +1,11 @@
 function pipelineUtils() {
     var self = this;
-    this.updatePipelines = function(divNames, errorDiv, view, fullscreen, page, component, showChanges, aggregatedChangesGroupingPattern, timeout, pipelineid, jsplumb) {
+    this.updatePipelines = function(divNames, timeoutVal, errorDiv, view, fullscreen, page, component, showChanges, aggregatedChangesGroupingPattern, timeout, pipelineid, jsplumb) {
 
         // JENKINS-46160 Don't refresh pipelines if the tab/window is not active
         if (document.hidden) {
             setTimeout(function () {
-                self.updatePipelines(divNames, errorDiv, view, fullscreen, page, component, showChanges, aggregatedChangesGroupingPattern, timeout, pipelineid, jsplumb);
+                self.updatePipelines(divNames, timeoutVal, errorDiv, view, fullscreen, page, component, showChanges, aggregatedChangesGroupingPattern, timeout, pipelineid, jsplumb);
             }, timeout);
             return;
         }
@@ -15,18 +15,18 @@ function pipelineUtils() {
             dataType: 'json',
             async: true,
             cache: false,
-            timeout: 20000,
+            timeout: timeoutVal,
             success: function (data) {
-                self.refreshPipelines(data, divNames, errorDiv, view, fullscreen, showChanges, aggregatedChangesGroupingPattern, pipelineid, jsplumb);
+                self.refreshPipelines(data, timeoutVal, divNames, errorDiv, view, fullscreen, showChanges, aggregatedChangesGroupingPattern, pipelineid, jsplumb);
                 setTimeout(function () {
-                    self.updatePipelines(divNames, errorDiv, view, fullscreen, page, component, showChanges, aggregatedChangesGroupingPattern, timeout, pipelineid, jsplumb);
+                    self.updatePipelines(divNames, timeoutVal, errorDiv, view, fullscreen, page, component, showChanges, aggregatedChangesGroupingPattern, timeout, pipelineid, jsplumb);
                 }, timeout);
             },
             error: function (xhr, status, error) {
                 Q('#' + errorDiv).html('Error communicating to server! ' + htmlEncode(error)).show();
                 jsplumb.repaintEverything();
                 setTimeout(function () {
-                    self.updatePipelines(divNames, errorDiv, view, fullscreen, page, component, showChanges, aggregatedChangesGroupingPattern, timeout, pipelineid, jsplumb);
+                    self.updatePipelines(divNames, timeoutVal, errorDiv, view, fullscreen, page, component, showChanges, aggregatedChangesGroupingPattern, timeout, pipelineid, jsplumb);
                 }, timeout);
             }
         });
@@ -34,7 +34,7 @@ function pipelineUtils() {
 
     var lastResponse = null;
 
-    this.refreshPipelines = function(data, divNames, errorDiv, view, showAvatars, showChanges, aggregatedChangesGroupingPattern, pipelineid, jsplumb) {
+    this.refreshPipelines = function(data, timeoutVal, divNames, errorDiv, view, showAvatars, showChanges, aggregatedChangesGroupingPattern, pipelineid, jsplumb) {
         var lastUpdate = data.lastUpdated;
         var pipeline;
         var component;
@@ -62,7 +62,7 @@ function pipelineUtils() {
                 component = data.pipelines[c];
 
                 html.push('<section class="pipeline-component">');
-                addPipelineHeader(html, component, data, c, resURL);
+                addPipelineHeader(html, timeoutVal, component, data, c, resURL);
                 html.push(getPagination(showAvatars, component));
 
                 if (component.pipelines.length === 0) {
@@ -191,16 +191,16 @@ function pipelineUtils() {
                             );
 
                             if (data.allowManualTriggers && task.manual && task.manualStep.enabled && task.manualStep.permission) {
-                                html.push('<div class="task-manual" id="manual-' + id + '" title="Trigger manual build" onclick="triggerManual(\'' + id + '\', \'' + task.id + '\', \'' + task.manualStep.upstreamProject + '\', \'' + task.manualStep.upstreamId + '\', \'' + view.viewUrl + '\')">');
+                                html.push('<div class="task-manual" id="manual-' + id + '" title="Trigger manual build" onclick="triggerManual(\'' + id + '\',\'' + timeoutVal + '\',\'' + task.id + '\', \'' + task.manualStep.upstreamProject + '\', \'' + task.manualStep.upstreamId + '\', \'' + view.viewUrl + '\')">');
                                 html.push('</div>');
                             } else if (!pipeline.aggregated) {
                                 if (data.allowRebuild && task.rebuildable) {
-                                    html.push('<div class="task-rebuild" id="rebuild-' + id + '" title="Trigger rebuild" onclick="triggerRebuild(\'' + id + '\', \'' + task.id + '\', \'' + task.buildId + '\', \'' + view.viewUrl + '\')">');
+                                    html.push('<div class="task-rebuild" id="rebuild-' + id + '" title="Trigger rebuild" onclick="triggerRebuild(\'' + id + '\',\'' + timeoutVal + '\', \'' + task.id + '\', \'' + task.buildId + '\', \'' + view.viewUrl + '\')">');
                                     html.push('</div>');
                                 }
                                 if (task.requiringInput) {
                                     showAbortButton = true;
-                                    html.push('<div class="task-manual" id="input-' + id + '" title="Specify input" onclick="specifyInput(\'' + id + '\', \'' + component.fullJobName + '\', \'' + task.buildId + '\', \'' + view.viewUrl + '\')">');
+                                    html.push('<div class="task-manual" id="input-' + id + '" title="Specify input" onclick="specifyInput(\'' + id + '\',\'' + timeoutVal + '\', \'' + component.fullJobName + '\', \'' + task.buildId + '\', \'' + view.viewUrl + '\')">');
                                     html.push('</div>');
                                 }
                                 if (showAbortButton) {
@@ -208,7 +208,7 @@ function pipelineUtils() {
                                     if (typeof projectName === "undefined") {
                                         projectName = task.id;
                                     }
-                                    html.push('<div class="task-abort" id="abort-' + id + '" title="Abort progress" onclick="abortBuild(\'' + id + '\', \'' + projectName + '\', \'' + task.buildId + '\', \'' + view.viewUrl + '\')">');
+                                    html.push('<div class="task-abort" id="abort-' + id + '" title="Abort progress" onclick="abortBuild(\'' + id + '\',\'' + timeoutVal + '\', \'' + projectName + '\', \'' + task.buildId + '\', \'' + view.viewUrl + '\')">');
                                     html.push('</div>');
                                 }
                             }
@@ -314,15 +314,15 @@ function pipelineUtils() {
     }
 }
 
-function addPipelineHeader(html, component, data, c, resURL) {
+function addPipelineHeader(html, timeoutVal, component, data, c, resURL) {
     html.push('<h1>' + htmlEncode(component.name));
     if (data.allowPipelineStart) {
         if (component.workflowComponent) {
-            html.push('&nbsp;<a id="startpipeline-' + c  +'" class="task-icon-link" href="#" onclick="triggerBuild(\'' + component.workflowUrl + '\', \'' + data.name + '\')">');
+            html.push('&nbsp;<a id="startpipeline-' + c  +'" class="task-icon-link" href="#" onclick="triggerBuild(\'' + component.workflowUrl + '\',\''+timeoutVal+'\', \'' + data.name + '\')">');
         } else if (component.firstJobParameterized) {
             html.push('&nbsp;<a id="startpipeline-' + c  +'" class="task-icon-link" href="#" onclick="triggerParameterizedBuild(\'' + component.firstJobUrl + '\', \'' + data.name + '\')">');
         } else {
-            html.push('&nbsp;<a id="startpipeline-' + c  +'" class="task-icon-link" href="#" onclick="triggerBuild(\'' + component.firstJobUrl + '\', \'' + data.name + '\')">');
+            html.push('&nbsp;<a id="startpipeline-' + c  +'" class="task-icon-link" href="#" onclick="triggerBuild(\'' + component.firstJobUrl + '\',\''+timeoutVal+'\', \'' + data.name + '\')">');
         }
         html.push('<img class="icon-clock icon-md" title="Build now" src="' + resURL + '/images/24x24/clock.png">');
         html.push('</a>');
@@ -597,7 +597,7 @@ function formatDuration(millis) {
     return minstr + secstr;
 }
 
-function triggerManual(taskId, downstreamProject, upstreamProject, upstreamBuild, viewUrl) {
+function triggerManual(taskId, timeoutVal, downstreamProject, upstreamProject, upstreamBuild, viewUrl) {
     Q('#manual-' + taskId).hide();
     var formData = {project: downstreamProject, upstream: upstreamProject, buildId: upstreamBuild};
     var before;
@@ -615,7 +615,7 @@ function triggerManual(taskId, downstreamProject, upstreamProject, upstreamBuild
         type: 'POST',
         data: formData,
         beforeSend: before,
-        timeout: 20000,
+        timeout: timeoutVal,
         async: true,
         success: function (data, textStatus, jqXHR) {
             console.info('Triggered build of ' + downstreamProject + ' successfully!');
@@ -626,7 +626,7 @@ function triggerManual(taskId, downstreamProject, upstreamProject, upstreamBuild
     });
 }
 
-function triggerRebuild(taskId, project, buildId, viewUrl) {
+function triggerRebuild(taskId, timeoutVal, project, buildId, viewUrl) {
     Q('#rebuild-' + taskId).hide();
     var formData = {project: project, buildId: buildId};
 
@@ -644,7 +644,7 @@ function triggerRebuild(taskId, project, buildId, viewUrl) {
         type: 'POST',
         data: formData,
         beforeSend: before,
-        timeout: 20000,
+        timeout: timeoutVal,
         success: function (data, textStatus, jqXHR) {
             console.info('Triggered rebuild of ' + project + ' successfully!')
         },
@@ -654,7 +654,7 @@ function triggerRebuild(taskId, project, buildId, viewUrl) {
     });
 }
 
-function specifyInput(taskId, project, buildId, viewUrl) {
+function specifyInput(taskId, timeoutVal, project, buildId, viewUrl) {
     Q('#input-' + taskId).hide();
     var formData = {project: project, upstream: 'N/A', buildId: buildId}, before;
 
@@ -672,7 +672,7 @@ function specifyInput(taskId, project, buildId, viewUrl) {
         type: 'POST',
         data: formData,
         beforeSend: before,
-        timeout: 20000,
+        timeout: timeoutVal,
         success: function (data, textStatus, jqXHR) {
             console.info('Successfully triggered input step of ' + project + '!')
         },
@@ -682,7 +682,7 @@ function specifyInput(taskId, project, buildId, viewUrl) {
     });
 }
 
-function abortBuild(taskId, project, buildId, viewUrl) {
+function abortBuild(taskId, timeoutVal, project, buildId, viewUrl) {
     Q('#abort-' + taskId).hide();
     var formData = {project: project, upstream: 'N/A', buildId: buildId}, before;
 
@@ -700,7 +700,7 @@ function abortBuild(taskId, project, buildId, viewUrl) {
         type: 'POST',
         data: formData,
         beforeSend: before,
-        timeout: 20000,
+        timeout: timeoutVal,
         success: function (data, textStatus, jqXHR) {
             console.info('Successfully aborted build of ' + project + '!')
         },
@@ -715,7 +715,7 @@ function triggerParameterizedBuild(url, taskId) {
     window.location.href = rootURL + '/' + url + 'build?delay=0sec';
 }
 
-function triggerBuild(url, taskId) {
+function triggerBuild(url, timeoutVal, taskId) {
     var before;
     if (crumb.value !== null && crumb.value !== '') {
         console.info('Crumb found and will be added to request header');
@@ -729,7 +729,7 @@ function triggerBuild(url, taskId) {
         url: rootURL + '/' + url + 'build?delay=0sec',
         type: 'POST',
         beforeSend: before,
-        timeout: 20000,
+        timeout: timeoutVal,
         success: function (data, textStatus, jqXHR) {
             console.info('Triggered build of ' + taskId + ' successfully!')
         },

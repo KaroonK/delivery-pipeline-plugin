@@ -84,6 +84,7 @@ public class DeliveryPipelineView extends View implements PipelineView {
 
     private static final int DEFAULT_NO_OF_PIPELINES = 3;
     private static final int MAX_NO_OF_PIPELINES = 50;
+    private static final int TIMEOUT_VAL = 20000;
 
     private static final String OLD_NONE_SORTER = "se.diabol.jenkins.pipeline.sort.NoOpComparator";
     private static final String NONE_SORTER = "none";
@@ -92,6 +93,7 @@ public class DeliveryPipelineView extends View implements PipelineView {
     private int noOfPipelines = DEFAULT_NO_OF_PIPELINES;
     private boolean showAggregatedPipeline = false;
     private int noOfColumns = 1;
+    private int timeout = TIMEOUT_VAL;
     private String sorting = NONE_SORTER;
     private String fullScreenCss = null;
     private String embeddedCss = null;
@@ -238,6 +240,12 @@ public class DeliveryPipelineView extends View implements PipelineView {
     public void setNoOfColumns(int noOfColumns) {
         this.noOfColumns = noOfColumns;
     }
+
+    public int getTimeout(){
+        return timeout;
+    }
+
+    public void setTimeout(int timeout){ this.timeout = timeout;}
 
     public String getFullScreenCss() {
         return fullScreenCss;
